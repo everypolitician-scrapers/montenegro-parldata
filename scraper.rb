@@ -66,6 +66,10 @@ xml.each do |chamber|
       source: person.xpath('sources/url').first.text,
       term: term[:id],
     }
+    if data[:name].to_s.empty?
+      warn "#{data} has no name"
+      next
+    end
 
     mems = person.xpath('memberships[organization[classification[text()="party"]]]').map { |m|
       {
