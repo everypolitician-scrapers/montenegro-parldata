@@ -6,10 +6,7 @@ require 'nokogiri'
 require 'open-uri'
 require 'colorize'
 require 'rest-client'
-
 require 'pry'
-require 'open-uri/cached'
-OpenURI::Cache.cache_path = '.cache'
 
 @API_URL = 'http://api.parldata.eu/me/skupstina/%s'
 
@@ -56,7 +53,7 @@ xml.each do |chamber|
   })
 
   mems.each do |mem|
-    person = mem.xpath('person')
+    person = mem.xpath('person') or next
     data = { 
       id: person.xpath('id').text,
       identifier__skupstina: person.xpath('.//identifiers[scheme[text()="skupstina.me/people"]]/identifier').text,
@@ -67,8 +64,14 @@ xml.each do |chamber|
       term: term[:id],
     }
     if data[:name].to_s.empty?
-      warn "#{data} has no name"
-      next
+      old = mem.xpath('.//changes/property[.="name"]/..').sort_by { |n| n.xpath('end_date').text }.last
+      if old
+        data[:name] = old.xpath('value').text
+        warn "#{data[:id]} has no name: rescuing '#{data[:name]}' from changes"
+      else
+        warn "#{data[:id]} has no name"
+        next
+      end
     end
 
     mems = person.xpath('memberships[organization[classification[text()="party"]]]').map { |m|
