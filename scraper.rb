@@ -11,7 +11,7 @@ require 'pry'
 @API_URL = 'http://api.parldata.eu/me/skupstina/%s'
 
 def noko_q(endpoint, h)
-  result = RestClient.get (@API_URL % endpoint), params: h
+  result = RestClient.get (@API_URL % endpoint), params: h, accept: :xml
   doc = Nokogiri::XML(result)
   doc.remove_namespaces!
   entries = doc.xpath('resource/resource')
